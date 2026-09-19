@@ -68,6 +68,13 @@
             border-radius: 3px;
         }
     </style>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
 </head>
 <body class="min-h-screen flex flex-col">
 
