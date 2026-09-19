@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triathlon & Strength Performance Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            accent: '#38bdf8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #090d16;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tab-active {
+            border-bottom: 2px solid #38bdf8;
+            color: #38bdf8;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="glass-panel sticky top-0 z-50 border-b border-slate-800 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-sky-500/10 text-sky-400 rounded-lg border border-sky-500/20">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-base text-slate-100 tracking-tight">TRIATLHON & STRENGTH</h1>
+                    <p class="text-xs text-slate-400 font-mono">META: 68.9 KG @ 10% BF</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex flex-col text-right font-mono text-xs">
+                    <span class="text-slate-400">PUNTO ACTUAL</span>
+                    <span id="header-weight-display" class="font-semibold text-sky-400">86.0 kg | 28.0% BF</span>
+                </div>
+                <button onclick="resetDataPrompt()" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Reiniciar datos">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="border-b border-slate-800 bg-slate-950/50 px-4">
+        <div class="max-w-7xl mx-auto flex space-x-6 overflow-x-auto font-medium text-sm">
+            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="py-3 px-2 flex items-center gap-2 tab-active transition whitespace-nowrap">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+            </button>
+            <button onclick="switchTab('workout')" id="tab-btn-workout" class="py-3 px-2 flex items-center gap-2 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                <i data-lucide="dumbbell" class="w-4 h-4"></i> Entrenamientos
+            </button>
+            <button onclick="switchTab('prs')" id="tab-btn-prs" class="py-3 px-2 flex items-center gap-2 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                <i data-lucide="trophy" class="w-4 h-4"></i> Récords (PRs)
+            </button>
+            <button onclick="switchTab('diet')" id="tab-btn-diet" class="py-3 px-2 flex items-center gap-2 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                <i data-lucide="utensils" class="w-4 h-4"></i> Dieta (2.300 kcal)
+            </button>
+            <button onclick="switchTab('benchmark')" id="tab-btn-benchmark" class="py-3 px-2 flex items-center gap-2 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                <i data-lucide="trending-down" class="w-4 h-4"></i> Benchmark Quincenal
+            </button>
+        </div>
+    </nav>
+
+    <!-- Content Area -->
+    <main class="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full">
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="space-y-6">
+            <!-- Top Summary Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-4 rounded-xl">
+                    <div class="flex justify-between items-start text-slate-400 mb-2">
+                        <span class="text-xs font-semibold">CUMPLIMIENTO SEMANA</span>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-emerald-400" id="weekly-completion-rate">0%</div>
+                    <p class="text-xs text-slate-500 mt-1">11 Sesiones Totales / Sem</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl">
+                    <div class="flex justify-between items-start text-slate-400 mb-2">
+                        <span class="text-xs font-semibold">PESO ACTUAL</span>
+                        <i data-lucide="scale" class="w-4 h-4 text-sky-400"></i>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-sky-400" id="dash-current-weight">86.0 kg</div>
+                    <p class="text-xs text-slate-500 mt-1">Objetivo final: 68.9 kg</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl">
+                    <div class="flex justify-between items-start text-slate-400 mb-2">
+                        <span class="text-xs font-semibold">% GRASA ACTUAL</span>
+                        <i data-lucide="percent" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-amber-400" id="dash-current-bf">28.0%</div>
+                    <p class="text-xs text-slate-500 mt-1">Objetivo final: 10.0%</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl">
+                    <div class="flex justify-between items-start text-slate-400 mb-2">
+                        <span class="text-xs font-semibold">PRs REGISTRADOS</span>
+                        <i data-lucide="award" class="w-4 h-4 text-purple-400"></i>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-purple-400" id="dash-total-prs">0</div>
+                    <p class="text-xs text-slate-500 mt-1">Ejercicios de Fuerza</p>
+                </div>
+            </div>
+
+            <!-- Quick Log Routine Status -->
+            <div class="glass-panel p-5 rounded-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-sky-400"></i>
+                        Estatus de Sesiones de la Semana Activa
+                    </h2>
+                    <span class="text-xs font-mono bg-sky-950 text-sky-400 px-2.5 py-1 rounded-md border border-sky-800">Semana 1 de 4</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="quick-routine-grid">
+                    <!-- Dynamic Quick Actions -->
+                </div>
+            </div>
+
+            <!-- Next Recommended Workouts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-5 rounded-xl space-y-3">
+                    <h3 class="font-bold text-sm text-slate-300 flex items-center gap-2">
+                        <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
+                        Últimos Registros de Cardio (Huawei Sync)
+                    </h3>
+                    <div id="recent-cardio-logs" class="text-xs text-slate-400 space-y-2">
+                        <p class="italic text-slate-500">No hay registros de cardio recientes aún.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-xl space-y-3">
+                    <h3 class="font-bold text-sm text-slate-300 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                        Recordatorios Clave
+                    </h3>
+                    <ul class="text-xs text-slate-400 space-y-2 list-disc list-inside">
+                        <li><strong>Agua / Hidratación:</strong> Mínimo 3.5 Litros al día.</li>
+                        <li><strong>Suplementación:</strong> 5g de Creatina al levantarse | Magnesio antes de dormir.</li>
+                        <li><strong>Zonas Cardio:</strong> Prioriza no sobrepasar pulsaciones en los CACOs y rodillo Z2.</li>
+                        <li><strong>Paciencia:</strong> El objetivo quincenal es ~0.5kg de pérdida grasa sostenida.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKOUT LOG TAB -->
+        <div id="tab-workout" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100">Registro de Sesiones de Entrenamiento</h2>
+                    <p class="text-xs text-slate-400">Selecciona el bloque para introducir cargas o métricas de tu reloj Huawei</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="workout-selector" onchange="renderWorkoutForm()" class="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 font-medium focus:ring-2 focus:ring-sky-500 outline-none">
+                        <optgroup label="Entrenamientos de Fuerza">
+                            <option value="s1">Strength 1 (Pierna / Torso)</option>
+                            <option value="s2">Strength 2 (Cadena Post / Empuje)</option>
+                            <option value="s3">Strength 3 (Unilateral & Core)</option>
+                            <option value="h1">Hypertrophy 1 (Torso / Abdomen)</option>
+                            <option value="h2">Hypertrophy 2 (Pierna / Armas)</option>
+                        </optgroup>
+                        <optgroup label="Entrenamientos Cardio (Huawei)">
+                            <option value="c1">Cardio 1: Bici Spinning Base Z2</option>
+                            <option value="c2">Cardio 2: Natación Técnica Z2</option>
+                            <option value="c3">Cardio 3: Cinta CACOs 10x</option>
+                            <option value="c4">Cardio 4: Bici Spinning Cambios Cadencia</option>
+                            <option value="c5">Cardio 5: Natación Continua 10x100m</option>
+                            <option value="c6">Cardio 6: Cinta CACOs Largo 6x</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dynamic Form Container -->
+            <div id="workout-form-container" class="glass-panel p-6 rounded-xl">
+                <!-- Javascript will inject workout form here -->
+            </div>
+        </div>
+
+        <!-- PRs TAB -->
+        <div id="tab-prs" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100">Récords Personales (PRs)</h2>
+                    <p class="text-xs text-slate-400">Se actualizan automáticamente conforme registras tus pesos máximos</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="pr-cards-grid">
+                <!-- PR cards will be rendered here -->
+            </div>
+        </div>
+
+        <!-- DIET TAB -->
+        <div id="tab-diet" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-xl border border-sky-500/20">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i data-lucide="utensils" class="w-5 h-5 text-sky-400"></i>
+                            Menú Diario Adaptado (2.300 kcal)
+                        </h2>
+                        <p class="text-xs text-slate-400">Ajustado para ayuno matutino, dobles sesiones y cena abundante para máxima satisfacción.</p>
+                    </div>
+                    <div class="flex gap-3 text-xs font-mono">
+                        <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-sky-400">Proteínas: 180g</span>
+                        <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-emerald-400">Carbos: 248g</span>
+                        <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-amber-400">Grasas: 65g</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <!-- Comida 1 -->
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>01. DESAYUNO (08:00 - 09:00)</span>
+                            <span class="text-sky-400">Ayuno Funcional</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-200">2 cafés con leche semidesnatada (sin azúcar)</p>
+                        <div class="text-xs text-slate-400 bg-slate-800/50 p-2 rounded border border-slate-800">
+                            <strong>Suplementación:</strong> 5g Creatina Monohidrato mezclada en agua al levantarse.
+                        </div>
+                    </div>
+
+                    <!-- Comida 2 -->
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>02. POST-FUERZA / MEDIA MAÑANA (11:30)</span>
+                            <span class="text-emerald-400">Proteína Rápida</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-200">250g Kéfir natural + 25g Proteína Whey + 1 Plátano</p>
+                        <p class="text-xs text-slate-400"><i>Opción 2:</i> 200g Leche semi + 30g Proteína + 1 Manzana + 15g Almendras</p>
+                    </div>
+
+                    <!-- Comida 3 -->
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>03. COMIDA / ALMUERZO (14:30)</span>
+                            <span class="text-amber-400">Carga Mediodía</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-200">120g Arroz en seco + 200g Pechuga Pollo/Pavo + 200g Verduras + 10g AOVE</p>
+                        <p class="text-xs text-slate-400"><i>Opción 2:</i> 120g Arroz + 200g Ternera magra + 200g Verduras + 5g AOVE</p>
+                    </div>
+
+                    <!-- Comida 4 -->
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>04. MERIENDA / PRE-CARDIO (18:00)</span>
+                            <span class="text-purple-400">Energía Pre-Entreno</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-200">200g Kéfir + 15g Whey + 1 Fruta + 15g Chocolate Negro (>85%)</p>
+                        <p class="text-xs text-slate-400"><i>Opción 2:</i> 2 Tortitas de arroz con 15g Crema de Cacahuete + 1 pieza de fruta</p>
+                    </div>
+
+                    <!-- Comida 5 -->
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2 md:col-span-2 border-sky-500/30">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>05. CENA PRINCIPAL (21:30 - MOMENTO DE RELAJACIÓN)</span>
+                            <span class="text-sky-400">Mayor Volumen</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-200">450g Patata o Boniato asado/cocido + 200g Pescado Blanco (o 180g Pechuga pollo) + 250g Verduras variadas + 10g AOVE</p>
+                        <div class="text-xs text-slate-400 bg-slate-800/50 p-2 rounded border border-slate-800 mt-2">
+                            <strong>Suplementación Nocturna:</strong> 1 Dosis de Magnesio (Bisglicinato o Citrato) 30-45m antes de dormir para descanso profundo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BENCHMARK TAB -->
+        <div id="tab-benchmark" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-100">Evolución Quincenal vs Benchmark</h2>
+                        <p class="text-xs text-slate-400">Compara tu evolución real frente al objetivo teórico de 68.9 kg @ 10% BF</p>
+                    </div>
+                    <button onclick="openWeightModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs px-4 py-2 rounded-lg transition flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Registrar Pesaje Quincenal
+                    </button>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="h-72 w-full pt-4">
+                    <canvas id="benchmarkChart"></canvas>
+                </div>
+
+                <!-- Table Container -->
+                <div class="overflow-x-auto border border-slate-800 rounded-xl">
+                    <table class="w-full text-xs text-left text-slate-300">
+                        <thead class="bg-slate-900 text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">Semana / Fecha</th>
+                                <th class="p-3">Peso Teórico</th>
+                                <th class="p-3">Peso Real</th>
+                                <th class="p-3">% Grasa Teórico</th>
+                                <th class="p-3">% Grasa Real</th>
+                                <th class="p-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmark-table-body" class="divide-y divide-slate-800/50 font-mono">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal for Logging Weight -->
+    <div id="weight-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="glass-panel max-w-md w-full p-6 rounded-2xl border border-slate-700 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-slate-100">Registrar Control Quincenal</h3>
+                <button onclick="closeWeightModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="weight-form" onsubmit="handleWeightSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Selecciona la Semana Quincenal</label>
+                    <select id="modal-week-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Peso Medido (kg)</label>
+                    <input type="number" step="0.1" id="modal-weight-input" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. 84.5">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">% Grasa Estimado / Medido</label>
+                    <input type="number" step="0.1" id="modal-bf-input" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. 26.8">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeWeightModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Database Models
+        const BENCHMARK_DATA = [
+            { week: 0, label: 'Semana 0 (Inicio)', targetWeight: 86.0, targetBf: 28.0 },
+            { week: 2, label: 'Semana 2 (Quincena 1)', targetWeight: 84.9, targetBf: 27.1 },
+            { week: 4, label: 'Semana 4 (Mes 1)', targetWeight: 83.8, targetBf: 26.1 },
+            { week: 6, label: 'Semana 6 (Quincena 3)', targetWeight: 82.7, targetBf: 25.1 },
+            { week: 8, label: 'Semana 8 (Mes 2)', targetWeight: 81.6, targetBf: 24.1 },
+            { week: 10, label: 'Semana 10 (Quincena 5)', targetWeight: 80.6, targetBf: 23.2 },
+            { week: 12, label: 'Semana 12 (Mes 3)', targetWeight: 79.6, targetBf: 22.2 },
+            { week: 14, label: 'Semana 14 (Quincena 7)', targetWeight: 78.6, targetBf: 21.2 },
+            { week: 16, label: 'Semana 16 (Mes 4)', targetWeight: 77.7, targetBf: 20.3 },
+            { week: 18, label: 'Semana 18 (Quincena 9)', targetWeight: 76.7, targetBf: 19.3 },
+            { week: 20, label: 'Semana 20 (Mes 5)', targetWeight: 75.8, targetBf: 18.3 },
+            { week: 22, label: 'Semana 22 (Quincena 11)', targetWeight: 74.8, targetBf: 17.2 },
+            { week: 24, label: 'Semana 24 (Mes 6)', targetWeight: 73.9, targetBf: 16.2 },
+            { week: 26, label: 'Semana 26 (Quincena 13)', targetWeight: 73.1, targetBf: 15.3 },
+            { week: 28, label: 'Semana 28 (Mes 7)', targetWeight: 72.3, targetBf: 14.4 },
+            { week: 30, label: 'Semana 30 (Quincena 15)', targetWeight: 71.5, targetBf: 13.4 },
+            { week: 32, label: 'Semana 32 (META 10%)', targetWeight: 68.9, targetBf: 10.1 }
+        ];
+
+        const WORKOUT_DEFINITIONS = {
+            s1: {
+                title: "Strength 1 (Pierna / Torso)",
+                type: "strength",
+                exercises: [
+                    "Sentadilla trasera profunda",
+                    "Extensiones cuádriceps máquina",
+                    "Jalón dorsal prono",
+                    "Remo polea sentado agarre biacromial",
+                    "Press militar sentado barra",
+                    "Elevaciones laterales mancuernas"
+                ]
+            },
+            s2: {
+                title: "Strength 2 (Cadena Posterior / Empuje)",
+                type: "strength",
+                exercises: [
+                    "Peso muerto convencional",
+                    "Curl femoral sentado máquina",
+                    "Press banca plano barra",
+                    "Peck deck",
+                    "Curl bíceps barra",
+                    "Curl bíceps predicador"
+                ]
+            },
+            s3: {
+                title: "Strength 3 (Unilateral & Core)",
+                type: "strength",
+                exercises: [
+                    "Sentadilla búlgara con mancuernas",
+                    "Hip thrust con barra",
+                    "Remo Gironda agarre neutro",
+                    "Press banca inclinado mancuernas (30°)",
+                    "Face pull en polea alta con cuerda",
+                    "Paseo del granjero unilateral"
+                ]
+            },
+            h1: {
+                title: "Hypertrophy 1 (Torso / Abdomen)",
+                type: "strength",
+                exercises: [
+                    "Press banca plano mancuernas",
+                    "Cruces polea low-to-high",
+                    "Elevaciones laterales polea baja unilateral",
+                    "Press hombro máquina",
+                    "Jalón dorsal agarre biacromial",
+                    "Pull over polea alta unilateral",
+                    "Crunch abdominal polea"
+                ]
+            },
+            h2: {
+                title: "Hypertrophy 2 (Pierna / Armas)",
+                type: "strength",
+                exercises: [
+                    "Prensa inclinada (ROM completo)",
+                    "Peso muerto rumano mancuernas",
+                    "Curl bíceps bayesian unilateral",
+                    "Press francés mancuernas",
+                    "Curl bíceps polea",
+                    "Extensiones tríceps polea alta",
+                    "Crunch invertido banco plano"
+                ]
+            },
+            c1: { title: "Cardio 1: Bici Spinning Base Z2", type: "cardio", detail: "45-50 min a cadencia 85-95 rpm en Z2 constante." },
+            c2: { title: "Cardio 2: Natación Técnica Z2", type: "cardio", detail: "1.500m divididos con uso de Pull Buoy para controlar FC." },
+            c3: { title: "Cardio 3: Cinta CACOs 10x", type: "cardio", detail: "10 Bloques: 2 min Trote suave / 1.5 min Caminata activa." },
+            c4: { title: "Cardio 4: Bici Spinning Cambios Cadencia", type: "cardio", detail: "50 min variando cadencia manteniendo pulso en Z2 alto." },
+            c5: { title: "Cardio 5: Natación Aeróbica Continua", type: "cardio", detail: "10x100m con 20s descanso entre series." },
+            c6: { title: "Cardio 6: Cinta CACOs Largo", type: "cardio", detail: "6 Bloques: 4 min Trote suave / 2 min Caminata." }
+        };
+
+        // State Store
+        let state = {
+            completedWorkouts: {},
+            prs: {},
+            workoutLogs: {},
+            cardioLogs: [],
+            benchmarkReal: {
+                0: { weight: 86.0, bf: 28.0 }
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocalStorage();
+            lucide.createIcons();
+            renderDashboard();
+            renderWorkoutForm();
+            renderPRs();
+            renderBenchmarkTable();
+            initChart();
+        });
+
+        // Navigation
+        function switchTab(tabId) {
+            ['dashboard', 'workout', 'prs', 'diet', 'benchmark'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabId) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            if (tabId === 'benchmark') {
+                updateChart();
+            }
+        }
+
+        // Local Storage Handling
+        function saveLocalStorage() {
+            localStorage.setItem('triathlon_tracker_state', JSON.stringify(state));
+        }
+
+        function loadLocalStorage() {
+            const saved = localStorage.getItem('triathlon_tracker_state');
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Error loading state", e);
+                }
+            }
+        }
+
+        function resetDataPrompt() {
+            if (confirm("¿Estás seguro de que deseas reiniciar todos los registros guardados?")) {
+                localStorage.removeItem('triathlon_tracker_state');
+                location.reload();
+            }
+        }
+
+        // Dashboard Rendering
+        function renderDashboard() {
+            const keys = Object.keys(WORKOUT_DEFINITIONS);
+            const completedCount = Object.values(state.completedWorkouts).filter(Boolean).length;
+            const percentage = Math.round((completedCount / keys.length) * 100);
+
+            document.getElementById('weekly-completion-rate').innerText = `${percentage}%`;
+            document.getElementById('dash-total-prs').innerText = Object.keys(state.prs).length;
+
+            // Get latest weight
+            const registeredWeeks = Object.keys(state.benchmarkReal).map(Number).sort((a,b) => b-a);
+            const latestWeek = registeredWeeks[0] || 0;
+            const currentObj = state.benchmarkReal[latestWeek];
+
+            document.getElementById('dash-current-weight').innerText = `${currentObj.weight.toFixed(1)} kg`;
+            document.getElementById('dash-current-bf').innerText = `${currentObj.bf.toFixed(1)}%`;
+            document.getElementById('header-weight-display').innerText = `${currentObj.weight.toFixed(1)} kg | ${currentObj.bf.toFixed(1)}% BF`;
+
+            // Quick Grid
+            const gridContainer = document.getElementById('quick-routine-grid');
+            gridContainer.innerHTML = '';
+
+            keys.forEach(key => {
+                const item = WORKOUT_DEFINITIONS[key];
+                const isDone = !!state.completedWorkouts[key];
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-lg border flex justify-between items-center transition ${isDone ? 'bg-emerald-950/20 border-emerald-800/50' : 'bg-slate-900/40 border-slate-800'}`;
+                card.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleWorkoutCompletion('${key}')" class="p-1 rounded ${isDone ? 'text-emerald-400' : 'text-slate-600 hover:text-slate-400'}">
+                            <i data-lucide="${isDone ? 'check-square' : 'square'}" class="w-5 h-5"></i>
+                        </button>
+                        <span class="text-xs font-medium ${isDone ? 'text-emerald-300 line-through' : 'text-slate-200'}">${item.title}</span>
+                    </div>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded ${item.type === 'strength' ? 'bg-sky-950 text-sky-400 border border-sky-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">${item.type.toUpperCase()}</span>
+                `;
+                gridContainer.appendChild(card);
+            });
+
+            // Recent Cardio Logs
+            const cardioContainer = document.getElementById('recent-cardio-logs');
+            if (state.cardioLogs.length === 0) {
+                cardioContainer.innerHTML = `<p class="italic text-slate-500">No hay registros de cardio recientes aún.</p>`;
+            } else {
+                cardioContainer.innerHTML = '';
+                state.cardioLogs.slice(-3).reverse().forEach(log => {
+                    const el = document.createElement('div');
+                    el.className = 'p-2 bg-slate-900/80 rounded border border-slate-800 flex justify-between items-center';
+                    el.innerHTML = `
+                        <div>
+                            <span class="font-bold text-sky-400">${log.workoutTitle}</span>
+                            <p class="text-[10px] text-slate-400">Pulsaciones: ${log.hrAvg} bpm avg (${log.hrMax} max) | Z2: ${log.z2Time} min</p>
+                        </div>
+                        <span class="font-mono text-slate-300">${log.date}</span>
+                    `;
+                    cardioContainer.appendChild(el);
+                });
+            }
+
+            lucide.createIcons();
+        }
+
+        function toggleWorkoutCompletion(key) {
+            state.completedWorkouts[key] = !state.completedWorkouts[key];
+            saveLocalStorage();
+            renderDashboard();
+        }
+
+        // Workout Form Builder
+        function renderWorkoutForm() {
+            const key = document.getElementById('workout-selector').value;
+            const def = WORKOUT_DEFINITIONS[key];
+            const container = document.getElementById('workout-form-container');
+
+            if (def.type === 'strength') {
+                let html = `
+                    <form onsubmit="handleStrengthSubmit(event, '${key}')" class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <h3 class="font-bold text-slate-100 flex items-center gap-2">
+                                <i data-lucide="dumbbell" class="w-5 h-5 text-sky-400"></i>
+                                ${def.title}
+                            </h3>
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-3 py-1.5 rounded-lg transition">Guardar Sesión</button>
+                        </div>
+                        <div class="space-y-3">
+                `;
+
+                def.exercises.forEach((ex, idx) => {
+                    const prevWeight = state.prs[ex] || '';
+                    html += `
+                        <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex-grow">
+                                <span class="text-xs font-semibold text-slate-200">${ex}</span>
+                                <span class="text-[10px] block text-slate-500">PR Máximo actual: ${prevWeight ? prevWeight + ' kg' : 'Sin registro'}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" step="0.5" id="ex-weight-${idx}" placeholder="Carga (kg)" class="w-28 bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded p-2 focus:ring-1 focus:ring-sky-500 outline-none">
+                                <input type="text" id="ex-notes-${idx}" placeholder="Reps / RIR (Ej. 4x8 RIR 2)" class="w-40 bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded p-2 focus:ring-1 focus:ring-sky-500 outline-none">
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></form>`;
+                container.innerHTML = html;
+            } else {
+                // Cardio Form
+                container.innerHTML = `
+                    <form onsubmit="handleCardioSubmit(event, '${key}')" class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <div>
+                                <h3 class="font-bold text-slate-100 flex items-center gap-2">
+                                    <i data-lucide="heart-pulse" class="w-5 h-5 text-amber-400"></i>
+                                    ${def.title}
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-1">${def.detail}</p>
+                            </div>
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded-lg transition">Guardar Cardio</button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">FC Media (bpm)</label>
+                                <input type="number" id="cardio-hr-avg" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. 138">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">FC Máxima (bpm)</label>
+                                <input type="number" id="cardio-hr-max" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. 156">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">Tiempo en Z2 (min)</label>
+                                <input type="number" id="cardio-z2-time" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. 38">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">Esfuerzo Percibido (RPE 1-10)</label>
+                                <input type="number" min="1" max="10" id="cardio-rpe" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. 6">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">Calorías Huawei (kcal)</label>
+                                <input type="number" id="cardio-calories" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. 420">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1">Observaciones / Sensaciones</label>
+                            <textarea id="cardio-notes" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none text-xs" placeholder="Buenas sensaciones de respiración, sin picos fuera de Z2..."></textarea>
+                        </div>
+                    </form>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // Submissions
+        function handleStrengthSubmit(e, workoutKey) {
+            e.preventDefault();
+            const def = WORKOUT_DEFINITIONS[workoutKey];
+
+            def.exercises.forEach((ex, idx) => {
+                const weightVal = parseFloat(document.getElementById(`ex-weight-${idx}`).value);
+                if (!isNaN(weightVal) && weightVal > 0) {
+                    if (!state.prs[ex] || weightVal > state.prs[ex]) {
+                        state.prs[ex] = weightVal;
+                    }
+                }
+            });
+
+            state.completedWorkouts[workoutKey] = true;
+            saveLocalStorage();
+            renderDashboard();
+            renderPRs();
+            alert("Sesión de Fuerza registrada y PRs actualizados.");
+        }
+
+        function handleCardioSubmit(e, workoutKey) {
+            e.preventDefault();
+            const def = WORKOUT_DEFINITIONS[workoutKey];
+
+            const log = {
+                workoutTitle: def.title,
+                date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
+                hrAvg: document.getElementById('cardio-hr-avg').value,
+                hrMax: document.getElementById('cardio-hr-max').value,
+                z2Time: document.getElementById('cardio-z2-time').value,
+                rpe: document.getElementById('cardio-rpe').value,
+                calories: document.getElementById('cardio-calories').value,
+                notes: document.getElementById('cardio-notes').value
+            };
+
+            state.cardioLogs.push(log);
+            state.completedWorkouts[workoutKey] = true;
+            saveLocalStorage();
+            renderDashboard();
+            alert("Métricas de Cardio Huawei guardadas con éxito.");
+        }
+
+        // Render PRs Tab
+        function renderPRs() {
+            const container = document.getElementById('pr-cards-grid');
+            container.innerHTML = '';
+
+            const keys = Object.keys(state.prs);
+            if (keys.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic col-span-3">Aún no se han registrado cargas. Registra tus entrenamientos para ver crecer tus récords.</p>`;
+                return;
+            }
+
+            keys.forEach(ex => {
+                const weight = state.prs[ex];
+                const card = document.createElement('div');
+                card.className = 'p-4 glass-panel rounded-xl flex justify-between items-center border border-purple-500/20';
+                card.innerHTML = `
+                    <div>
+                        <span class="text-xs font-semibold text-slate-200 block">${ex}</span>
+                        <span class="text-[10px] text-purple-400">Máxima Carga Registrada</span>
+                    </div>
+                    <div class="text-xl font-bold font-mono text-purple-300 bg-purple-950/40 px-3 py-1 rounded-lg border border-purple-800">
+                        ${weight} kg
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Benchmark & Modal Handling
+        function openWeightModal() {
+            const select = document.getElementById('modal-week-select');
+            select.innerHTML = '';
+            BENCHMARK_DATA.forEach(b => {
+                select.innerHTML += `<option value="${b.week}">${b.label}</option>`;
+            });
+            document.getElementById('weight-modal').classList.remove('hidden');
+        }
+
+        function closeWeightModal() {
+            document.getElementById('weight-modal').classList.add('hidden');
+        }
+
+        function handleWeightSubmit(e) {
+            e.preventDefault();
+            const week = parseInt(document.getElementById('modal-week-select').value);
+            const weight = parseFloat(document.getElementById('modal-weight-input').value);
+            const bf = parseFloat(document.getElementById('modal-bf-input').value);
+
+            state.benchmarkReal[week] = { weight, bf };
+            saveLocalStorage();
+            renderDashboard();
+            renderBenchmarkTable();
+            updateChart();
+            closeWeightModal();
+        }
+
+        function renderBenchmarkTable() {
+            const tbody = document.getElementById('benchmark-table-body');
+            tbody.innerHTML = '';
+
+            BENCHMARK_DATA.forEach(row => {
+                const real = state.benchmarkReal[row.week];
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/30 transition';
+
+                let diffText = '-';
+                if (real) {
+                    const diff = real.weight - row.targetWeight;
+                    diffText = diff <= 0 
+                        ? `<span class="text-emerald-400">${diff.toFixed(1)} kg</span>`
+                        : `<span class="text-amber-400">+${diff.toFixed(1)} kg</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-200">${row.label}</td>
+                    <td class="p-3 text-slate-400">${row.targetWeight.toFixed(1)} kg</td>
+                    <td class="p-3 text-sky-400 font-bold">${real ? real.weight.toFixed(1) + ' kg' : '-'}</td>
+                    <td class="p-3 text-slate-400">${row.targetBf.toFixed(1)}%</td>
+                    <td class="p-3 text-amber-400 font-bold">${real ? real.bf.toFixed(1) + '%' : '-'}</td>
+                    <td class="p-3 text-[11px]">${diffText}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Chart Initialization
+        let chartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('benchmarkChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: BENCHMARK_DATA.map(b => `Sem ${b.week}`),
+                    datasets: [
+                        {
+                            label: 'Peso Teórico (kg)',
+                            data: BENCHMARK_DATA.map(b => b.targetWeight),
+                            borderColor: '#64748b',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Peso Real (kg)',
+                            data: BENCHMARK_DATA.map(b => state.benchmarkReal[b.week] ? state.benchmarkReal[b.week].weight : null),
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } },
+                            grid: { color: '#1e293b' }
+                        },
+                        y: {
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } },
+                            grid: { color: '#1e293b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+            chartInstance.data.datasets[1].data = BENCHMARK_DATA.map(b => state.benchmarkReal[b.week] ? state.benchmarkReal[b.week].weight : null);
+            chartInstance.update();
+        }
+    </script>
+</body>
+</html>
